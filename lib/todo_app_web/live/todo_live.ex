@@ -12,10 +12,26 @@ defmodule TodoAppWeb.TodoLive do
       <h1>Todo List</h1>
       <ul>
         <%= for todo <- @todos do %>
-          <li><%= todo.title %></li>
+          <li>
+            <%= content_tag :input,
+                nil,
+                type: "checkbox",
+                phx_click: "toggle-todo",
+                phx_value_todo_id: todo.id,
+                checked: todo.completed %>
+            <%= todo.title %>
+          </li>
         <% end %>
       </ul>
     """
+  end
+
+  def handle_event("toggle-todo", %{"todo-id" => id}, socket) do
+    todo = Todos.get_todo!(id)
+
+    {:ok, _} = Todos.update_todo(todo, %{completed: !todo.completed})
+
+    {:noreply, socket}
   end
 
   defp fetch(socket) do
