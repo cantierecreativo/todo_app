@@ -43,6 +43,14 @@ defmodule TodoAppWeb.TodoLive do
           </li>
         <% end %>
       </ul>
+      <footer>
+        <%= live_patch "All",
+            to: Routes.live_path(@socket, TodoAppWeb.TodoLive),
+            class: "button" %>
+        <%= live_patch "Completed",
+            to: Routes.live_path(@socket, TodoAppWeb.TodoLive, %{filter: "completed"}),
+            class: "button" %>
+      </footer>
       <%= if @show_edit_modal do %>
         <%= live_modal @socket,
             TodoAppWeb.FormComponent,
@@ -104,6 +112,14 @@ defmodule TodoAppWeb.TodoLive do
          |> assign(:show_edit_modal, true)
          |> assign(:todo, todo)}
     end
+  end
+
+  def handle_params(%{"filter" => filter}, _uri, socket) do
+    {:noreply,
+     socket
+     |> assign(:todos, Todos.list_completed_todos())
+     |> assign(:filter, filter)
+    }
   end
 
   def handle_params(_params, _uri, socket) do

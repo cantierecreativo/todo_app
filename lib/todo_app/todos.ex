@@ -21,6 +21,10 @@ defmodule TodoApp.Todos do
     Repo.all(Todo)
   end
 
+  def list_completed_todos do
+    from(t in Todo, where: t.completed) |> Repo.all
+  end
+
   @doc """
   Gets a single todo.
 
