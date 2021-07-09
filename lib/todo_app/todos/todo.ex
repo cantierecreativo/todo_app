@@ -5,6 +5,7 @@ defmodule TodoApp.Todos.Todo do
   schema "todos" do
     field :title, :string
     field :completed, :boolean
+    field :position, :integer
 
     timestamps()
   end
@@ -12,7 +13,7 @@ defmodule TodoApp.Todos.Todo do
   @doc false
   def changeset(todo, attrs) do
     todo
-    |> cast(attrs, [:title, :completed])
+    |> cast(attrs, [:title, :completed, :position])
     |> validate_required([:title])
   end
 end

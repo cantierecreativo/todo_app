@@ -23,9 +23,9 @@ defmodule TodoAppWeb.TodoLive do
         <%= error_tag f, :title %>
         <%= submit "Add", phx_disable_with: "Adding..." %>
       <% end %>
-      <ul>
+      <ul phx-hook="InitSortable" id="items" data-target-id="#items">
         <%= for todo <- @todos do %>
-          <li>
+          <li data-sortable-id=<%=todo.id %>>
             <%= content_tag :input,
                 nil,
                 type: "checkbox",
@@ -96,6 +96,16 @@ defmodule TodoAppWeb.TodoLive do
     {:ok, _} = Todos.delete_todo(todo)
 
     {:noreply, fetch(socket)}
+  end
+
+  def handle_event("sort", %{"list" => list}, socket) do
+    list
+    |> Enum.each(fn %{"id" => id, "position" => position} ->
+      Todos.get_todo!(id)
+      |> Todos.update_todo(%{"position" => position})
+    end)
+
+    {:noreply, socket}
   end
 
   def handle_params(%{"edit" => id}, _uri, socket) do

@@ -18,7 +18,7 @@ defmodule TodoApp.Todos do
 
   """
   def list_todos do
-    Repo.all(Todo)
+    Todo |> order_by(asc: :position) |> Repo.all()
   end
 
   def list_completed_todos do
