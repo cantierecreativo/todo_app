@@ -33,6 +33,11 @@ defmodule TodoAppWeb.TodoLive do
                 phx_value_todo_id: todo.id,
                 checked: todo.completed %>
             <%= todo.title %>
+            <%= link "Delete",
+                to: "#",
+                phx_click: "delete-todo",
+                phx_value_todo_id: todo.id,
+                data: [confirm: "Are you sure?"] %>
           </li>
         <% end %>
       </ul>
@@ -64,6 +69,14 @@ defmodule TodoAppWeb.TodoLive do
       |> Map.put(:action, :validate)
 
     {:noreply, assign(socket, changeset: changeset)}
+  end
+
+  def handle_event("delete-todo", %{"todo-id" => id}, socket) do
+    todo = Todos.get_todo!(id)
+
+    {:ok, _} = Todos.delete_todo(todo)
+
+    {:noreply, fetch(socket)}
   end
 
   defp fetch(socket) do
