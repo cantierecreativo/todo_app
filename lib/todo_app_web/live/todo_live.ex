@@ -33,6 +33,8 @@ defmodule TodoAppWeb.TodoLive do
                 phx_value_todo_id: todo.id,
                 checked: todo.completed %>
             <%= todo.title %>
+            <%= live_patch "Edit",
+                to: Routes.live_path(@socket, TodoAppWeb.TodoLive, %{edit: todo.id}) %>
             <%= link "Delete",
                 to: "#",
                 phx_click: "delete-todo",
@@ -41,6 +43,15 @@ defmodule TodoAppWeb.TodoLive do
           </li>
         <% end %>
       </ul>
+      <%= if @show_edit_modal do %>
+        <%= live_modal @socket,
+            TodoAppWeb.FormComponent,
+            id: @todo.id,
+            title: "Edit",
+            action: @live_action,
+            todo: @todo,
+            return_to: Routes.live_path(@socket, TodoAppWeb.TodoLive) %>
+      <% end %>
     """
   end
 
@@ -79,9 +90,30 @@ defmodule TodoAppWeb.TodoLive do
     {:noreply, fetch(socket)}
   end
 
+  def handle_params(%{"edit" => id}, _uri, socket) do
+    todo = Todos.get_todo(id)
+
+    case todo do
+      nil ->
+        {:noreply,
+         socket
+         |> put_flash(:info, "Todo not found")}
+      _ ->
+        {:noreply,
+         socket
+         |> assign(:show_edit_modal, true)
+         |> assign(:todo, todo)}
+    end
+  end
+
+  def handle_params(_params, _uri, socket) do
+    {:noreply, fetch(socket)}
+  end
+
   defp fetch(socket) do
     socket
     |> assign(:changeset, Todos.change_todo(%TodoApp.Todos.Todo{}))
     |> assign(:todos, Todos.list_todos())
+    |> assign(:show_edit_modal, false)
   end
 end

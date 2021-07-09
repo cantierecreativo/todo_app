@@ -37,6 +37,8 @@ defmodule TodoApp.Todos do
   """
   def get_todo!(id), do: Repo.get!(Todo, id)
 
+  def get_todo(id), do: Repo.get(Todo, id)
+
   @doc """
   Creates a todo.
 
