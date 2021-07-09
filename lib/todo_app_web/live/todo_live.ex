@@ -10,6 +10,19 @@ defmodule TodoAppWeb.TodoLive do
   def render(assigns) do
     ~L"""
       <h1>Todo List</h1>
+      <%= form_for @changeset,
+          "#",
+          [
+            id: "todo-form",
+            phx_submit: "add-todo",
+            phx_change: "validate"
+          ], fn f -> %>
+        <%= text_input :todo,
+            :title,
+            placeholder: "Create a todo" %>
+        <%= error_tag f, :title %>
+        <%= submit "Add", phx_disable_with: "Adding..." %>
+      <% end %>
       <ul>
         <%= for todo <- @todos do %>
           <li>
@@ -34,7 +47,28 @@ defmodule TodoAppWeb.TodoLive do
     {:noreply, socket}
   end
 
+  def handle_event("add-todo", %{"todo" => params}, socket) do
+    case Todos.create_todo(params) do
+      {:ok, _todo} ->
+        {:noreply, fetch(socket)}
+
+      {:error, %Ecto.Changeset{} = changeset} ->
+        {:noreply, assign(socket, changeset: changeset)}
+    end
+  end
+
+  def handle_event("validate", %{"todo" => params}, socket) do
+    changeset =
+      %TodoApp.Todos.Todo{}
+      |> Todos.change_todo(params)
+      |> Map.put(:action, :validate)
+
+    {:noreply, assign(socket, changeset: changeset)}
+  end
+
   defp fetch(socket) do
-    assign(socket, %{todos: Todos.list_todos()})
+    socket
+    |> assign(:changeset, Todos.change_todo(%TodoApp.Todos.Todo{}))
+    |> assign(:todos, Todos.list_todos())
   end
 end
