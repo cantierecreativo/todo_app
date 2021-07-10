@@ -10,19 +10,12 @@ defmodule TodoAppWeb.TodoLive do
   def render(assigns) do
     ~L"""
       <h1>Todo List</h1>
-      <%= form_for @changeset,
-          "#",
-          [
-            id: "todo-form",
-            phx_submit: "add-todo",
-            phx_change: "validate"
-          ], fn f -> %>
-        <%= text_input :todo,
-            :title,
-            placeholder: "Create a todo" %>
-        <%= error_tag f, :title %>
-        <%= submit "Add", phx_disable_with: "Adding..." %>
-      <% end %>
+      <%= live_component @socket,
+          TodoAppWeb.FormComponent,
+          id: "todo-form",
+          action: :new,
+          todo: @todo,
+          return_to: Routes.live_path(@socket, TodoAppWeb.TodoLive) %>
       <ul phx-hook="InitSortable" id="items" data-target-id="#items">
         <%= for todo <- @todos do %>
           <li data-sortable-id=<%=todo.id %>>
@@ -56,7 +49,7 @@ defmodule TodoAppWeb.TodoLive do
             TodoAppWeb.FormComponent,
             id: @todo.id,
             title: "Edit",
-            action: @live_action,
+            action: :edit,
             todo: @todo,
             return_to: Routes.live_path(@socket, TodoAppWeb.TodoLive) %>
       <% end %>
@@ -69,25 +62,6 @@ defmodule TodoAppWeb.TodoLive do
     {:ok, _} = Todos.update_todo(todo, %{completed: !todo.completed})
 
     {:noreply, socket}
-  end
-
-  def handle_event("add-todo", %{"todo" => params}, socket) do
-    case Todos.create_todo(params) do
-      {:ok, _todo} ->
-        {:noreply, fetch(socket)}
-
-      {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, assign(socket, changeset: changeset)}
-    end
-  end
-
-  def handle_event("validate", %{"todo" => params}, socket) do
-    changeset =
-      %TodoApp.Todos.Todo{}
-      |> Todos.change_todo(params)
-      |> Map.put(:action, :validate)
-
-    {:noreply, assign(socket, changeset: changeset)}
   end
 
   def handle_event("delete-todo", %{"todo-id" => id}, socket) do
@@ -140,6 +114,7 @@ defmodule TodoAppWeb.TodoLive do
     socket
     |> assign(:changeset, Todos.change_todo(%TodoApp.Todos.Todo{}))
     |> assign(:todos, Todos.list_todos())
+    |> assign(:todo, %TodoApp.Todos.Todo{})
     |> assign(:show_edit_modal, false)
   end
 end

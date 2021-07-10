@@ -41,6 +41,22 @@ defmodule TodoAppWeb.FormComponent do
   end
 
   def handle_event("save", %{"todo" => todo_params}, socket) do
+    save_todo(socket, socket.assigns.action, todo_params)
+  end
+
+  defp save_todo(socket, :new, todo_params) do
+    case Todos.create_todo(todo_params) do
+      {:ok, _todo} ->
+        {:noreply,
+         socket
+         |> push_redirect(to: socket.assigns.return_to)}
+
+      {:error, %Ecto.Changeset{} = changeset} ->
+        {:noreply, assign(socket, changeset: changeset)}
+    end
+  end
+
+  defp save_todo(socket, :edit, todo_params) do
     case Todos.update_todo(socket.assigns.todo, todo_params) do
       {:ok, _todo} ->
         {:noreply,
