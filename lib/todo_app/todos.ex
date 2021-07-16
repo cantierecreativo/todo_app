@@ -7,6 +7,13 @@ defmodule TodoApp.Todos do
   alias TodoApp.Repo
 
   alias TodoApp.Todos.Todo
+  alias TodoApp.PubSub
+
+  @topic inspect(__MODULE__)
+
+  def subscribe do
+    Phoenix.PubSub.subscribe(PubSub, @topic)
+  end
 
   @doc """
   Returns the list of todos.
@@ -59,6 +66,7 @@ defmodule TodoApp.Todos do
     %Todo{}
     |> Todo.changeset(attrs)
     |> Repo.insert()
+    |> notify({:todo, :created})
   end
 
   @doc """
@@ -77,6 +85,7 @@ defmodule TodoApp.Todos do
     todo
     |> Todo.changeset(attrs)
     |> Repo.update()
+    |> notify({:todo, :updated})
   end
 
   @doc """
@@ -93,6 +102,7 @@ defmodule TodoApp.Todos do
   """
   def delete_todo(%Todo{} = todo) do
     Repo.delete(todo)
+    |> notify({:todo, :deleted})
   end
 
   @doc """
@@ -107,4 +117,12 @@ defmodule TodoApp.Todos do
   def change_todo(%Todo{} = todo, attrs \\ %{}) do
     Todo.changeset(todo, attrs)
   end
+
+  defp notify({:ok, result}, event) do
+    Phoenix.PubSub.broadcast(PubSub, @topic, {TodoApp.Todos, event, result})
+
+    {:ok, result}
+  end
+
+  defp notify({:error, reason}, _), do: {:error, reason}
 end

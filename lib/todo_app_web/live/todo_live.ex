@@ -4,6 +4,8 @@ defmodule TodoAppWeb.TodoLive do
   alias TodoApp.Todos
 
   def mount(_params, _session, socket) do
+    Todos.subscribe()
+
     {:ok, fetch(socket)}
   end
 
@@ -108,6 +110,10 @@ defmodule TodoAppWeb.TodoLive do
 
   def handle_params(_params, _uri, socket) do
     {:noreply, fetch(socket)}
+  end
+
+  def handle_info({Todos, {:todo, action} = event, _result}, socket) do
+    {:noreply, assign(socket, :todos, Todos.list_todos())}
   end
 
   defp fetch(socket) do
